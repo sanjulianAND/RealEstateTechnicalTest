@@ -29,3 +29,18 @@ Edit `01.Api/appsettings.json`:
   }
 }
 ```
+
+### Endpoints
+
+- `GET /v1/properties` — filters: `name,address,codeInternal,ownerId,minPrice,maxPrice,minYear,maxYear`, sort: `price|-price|year|-year|createdAt|-createdAt`, paging: `page,pageSize`. Adds `X-Total-Count`.
+- `POST /v1/properties` — create property.
+- `PUT /v1/properties/{id}` — update fields.
+- `PATCH /v1/properties/{id}/price` — change price.
+- `POST /v1/properties/{id}/images` — add image.
+
+### Error codes
+
+- `400` invalid input (e.g., non-positive price).
+- `404` not found.
+- `409` unique constraint conflict (e.g., `CodeInternal`).
+- `500` unexpected error.

@@ -1,5 +1,10 @@
-﻿using Application.Abstractions.Ports;
+﻿using Domain.Entities;
+using Infrastructure.Abstractions;
+using Infrastructure.Features.Properties.AddImage;
+using Infrastructure.Features.Properties.ChangePrice;
+using Infrastructure.Features.Properties.Create;
 using Infrastructure.Features.Properties.List;
+using Infrastructure.Features.Properties.Update;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,8 +22,7 @@ public sealed class PropertyRepository : IPropertyRepository
         _logger = logger;
     }
 
-    public async Task<(IReadOnlyList<PropertyListItemDto> Items, int Total)> ListAsync(
-        PropertyListQuery q, CancellationToken ct)
+    public async Task<(IReadOnlyList<PropertyListItemDto> Items, int Total)> ListAsync(PropertyListQuery q, CancellationToken ct)
     {
         try
         {
@@ -73,6 +77,112 @@ public sealed class PropertyRepository : IPropertyRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error querying properties");
+            throw;
+        }
+    }
+
+    public async Task<Guid> CreateAsync(PropertyCreateRequestDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var owner = await _db.Owners.AsNoTracking().FirstOrDefaultAsync(o => o.IdOwner == dto.OwnerId, ct);
+            if (owner is null) throw new KeyNotFoundException("Owner not found");
+
+            var existsCode = await _db.Properties.AnyAsync(p => p.CodeInternal == dto.CodeInternal, ct);
+            if (existsCode) throw new InvalidOperationException("CodeInternal already exists");
+
+            var entity = new Property
+            {
+                IdProperty = Guid.NewGuid(),
+                Name = dto.Name,
+                Address = dto.Address,
+                Price = dto.Price,
+                CodeInternal = dto.CodeInternal,
+                Year = dto.Year,
+                IdOwner = dto.OwnerId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _db.Properties.Add(entity);
+            await _db.SaveChangesAsync(ct);
+            return entity.IdProperty;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating property");
+            throw;
+        }
+    }
+
+    public async Task UpdateAsync(Guid id, PropertyUpdateRequestDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var entity = await _db.Properties.FirstOrDefaultAsync(p => p.IdProperty == id, ct);
+            if (entity is null) throw new KeyNotFoundException("Property not found");
+
+            var codeTaken = await _db.Properties.AnyAsync(p => p.CodeInternal == dto.CodeInternal && p.IdProperty != id, ct);
+            if (codeTaken) throw new InvalidOperationException("CodeInternal already exists");
+
+            entity.Name = dto.Name;
+            entity.Address = dto.Address;
+            entity.CodeInternal = dto.CodeInternal;
+            entity.Year = dto.Year;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating property {Id}", id);
+            throw;
+        }
+    }
+
+    public async Task ChangePriceAsync(Guid id, PropertyChangePriceRequestDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var entity = await _db.Properties.FirstOrDefaultAsync(p => p.IdProperty == id, ct);
+            if (entity is null) throw new KeyNotFoundException("Property not found");
+            if (dto.NewPrice <= 0) throw new InvalidOperationException("Price must be positive");
+
+            entity.Price = dto.NewPrice;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error changing price for property {Id}", id);
+            throw;
+        }
+    }
+
+    public async Task<Guid> AddImageAsync(Guid id, PropertyAddImageRequestDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var exists = await _db.Properties.AnyAsync(p => p.IdProperty == id, ct);
+            if (!exists) throw new KeyNotFoundException("Property not found");
+
+            var img = new PropertyImage
+            {
+                IdPropertyImage = Guid.NewGuid(),
+                IdProperty = id,
+                File = dto.File,
+                Enabled = dto.Enabled,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.PropertyImages.Add(img);
+            await _db.SaveChangesAsync(ct);
+            return img.IdPropertyImage;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding image to property {Id}", id);
             throw;
         }
     }
