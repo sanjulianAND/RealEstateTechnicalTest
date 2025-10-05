@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Application.Abstractions.Ports;
+using Infrastructure.Persistence;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Infrastructure.Persistence;
 
 namespace Infrastructure.DependencyInjection;
 
@@ -11,6 +13,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<RealEstateDbContext>(opt =>
             opt.UseSqlServer(cfg.GetConnectionString("RealEstate")));
+
+        services.AddScoped<IPropertyRepository, PropertyRepository>();
         return services;
     }
 }
