@@ -1,5 +1,5 @@
-﻿using Application.Abstractions.Ports;
-using FluentValidation;
+﻿using FluentValidation;
+using Infrastructure.Abstractions;
 using Infrastructure.Features.Properties.List;
 using Microsoft.Extensions.Logging;
 

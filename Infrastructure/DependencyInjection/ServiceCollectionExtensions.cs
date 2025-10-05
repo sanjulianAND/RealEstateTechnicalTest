@@ -1,4 +1,4 @@
-﻿using Application.Abstractions.Ports;
+﻿using Infrastructure.Abstractions;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
