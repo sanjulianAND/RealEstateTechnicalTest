@@ -1,7 +1,22 @@
-# RealEstateTechnicalTest
+# RealEstate Technical Test – Clean Architecture API (.NET 8 + SQL Server)
 
-Clean architecture scaffold for the technical test.  
-This first commit only includes the solution layout and a **/ping** endpoint that checks SQL Server connectivity.
+API to manage Real-Estate Properties with the services requested by the exercise:
+- Create Property
+- Update Property
+- Change Price
+- Add Image
+- List Properties with filters, sorting & pagination
+It uses a Clean-ish modular layout matching the project references you asked to keep, plus structured logging. Unit tests cover validators and handlers with Moq.
+
+## Tech Stack
+
+- .NET 8 (ASP.NET Core Web API)
+- SQL Server (on-prem or Docker)
+- EF Core 8 (DbContext + LINQ queries)
+- FluentValidation (validators per use case)
+- NUnit + Moq + FluentAssertions (tests)
+- Swagger / OpenAPI (built-in)
+- Docker (API + SQL), optional Azure DevOps pipeline YAML
 
 ## Projects
 
@@ -12,13 +27,31 @@ This first commit only includes the solution layout and a **/ping** endpoint tha
 - **05.Shared**: Shared primitives (placeholder for now).
 - **06.Test**: NUnit tests project (placeholder for now).
 
-## Requirements
+## Database Model
 
+Tables follow the diagram provided plus a few pragmatic fields:
+
+ - Property: IdProperty (PK), Name, Address, Price (CHECK Price>0), CodeInternal (UNIQUE), Year, IdOwner (FK), CreatedAt, UpdatedAt
+ - PropertyImage: IdPropertyImage (PK), IdProperty (FK), File, Enabled, CreatedAt
+ - PropertyTrace: IdPropertyTrace (PK), IdProperty (FK), DateSale, Name, Value, Tax
+ - Owner: IdOwner (PK), Name, Address, Photo, Birthday
+
+Indexes: IX_Property_Price, IX_Property_Year, IX_Property_CreatedAt,
+IX_PropertyImage (IdProperty, Enabled), IX_PropertyTrace (IdProperty, DateSale).
+
+- Added CreatedAt/UpdatedAt and Enabled to match the note “add fields as you see fit”.
+
+### How to Run Locally
+
+Prerequisites
 - .NET 8 SDK
-- SQL Server instance available
-- Visual Studio 2022 (or `dotnet` CLI)
+- SQL Server running (local instance, e.g. .\SQLEXPRESS or default)
+- Visual Studio 2022 or VS Code + C# Dev Kit
 
-## Configure connection string
+Create Database & Schema
+- Run your SQL script in SSMS (or sqlcmd) against your instance to create RealEstateDB and the tables.
+
+Configure Connection String
 
 Edit `01.Api/appsettings.json`:
 
@@ -26,9 +59,15 @@ Edit `01.Api/appsettings.json`:
 {
   "ConnectionStrings": {
     "RealEstate": "Server=DESKTOP-D867T7P\\SQLEXPRESS;Database=RealEstateDB;Trusted_Connection=True;TrustServerCertificate=True;"
-  }
+  },
+  "Logging": { "LogLevel": { "Default": "Information", "Microsoft.AspNetCore": "Warning" } }
 }
 ```
+Run
+
+dotnet restore
+dotnet build -c Debug
+dotnet run --project RealEstateTechnicalTest
 
 ### Endpoints
 
@@ -38,9 +77,18 @@ Edit `01.Api/appsettings.json`:
 - `PATCH /v1/properties/{id}/price` — change price.
 - `POST /v1/properties/{id}/images` — add image.
 
-### Error codes
+### Testing (NUnit)
 
-- `400` invalid input (e.g., non-positive price).
-- `404` not found.
-- `409` unique constraint conflict (e.g., `CodeInternal`).
-- `500` unexpected error.
+dotnet test -c Debug
+dotnet test -c Debug --logger "trx;LogFileName=test-results.trx"
+
+### How to Run with Docker (My extra)
+
+Files
+- RealEstateTechnicalTest/Dockerfile – builds & runs API
+- RealEstateTechnicalTest/appsettings.Docker.json – connection to the SQL container
+- docker-compose.yml – orchestrates sql + api
+
+Compose Up
+- docker compose up --build
+
