@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: realestate-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Your_strong_password_123"
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Your_strong_password_123 -Q 'SELECT 1' || exit 1",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  api:
+    build:
+      context: .
+      dockerfile: RealEstateTechnicalTest/Dockerfile
+    container_name: realestate-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ASPNETCORE_HOSTINGSTARTUPASSEMBLIES: "Microsoft.AspNetCore.SwaggerGen"
+    ports:
+      - "8080:8080"
+    depends_on:
+      sql:
+        condition: service_healthy
+    volumes:
+      - ./RealEstateTechnicalTest/appsettings.Docker.json:/app/appsettings.Docker.json:ro

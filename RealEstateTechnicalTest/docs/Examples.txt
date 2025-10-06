@@ -1,0 +1,43 @@
+Swagger Examples
+
+GET /v1/properties
+  name: Beach
+  address: Miami
+  codeInternal: BB-2BR-1200
+  ownerId: F9CFDC66-413E-42BD-9829-2CEEDF7891F7
+  minPrice: 300000
+  maxPrice: 600000
+  minYear: 2010
+  maxYear: 2022
+  sort: -price (o price|year|-year|createdAt|-createdAt)
+  page: 1
+  pageSize: 10
+
+POST /v1/properties
+  {
+    "name": "Wynwood Loft 1BR",
+    "address": "2500 NW 2nd Ave, Miami, FL",
+    "price": 425000,
+    "codeInternal": "WY-LOFT-2500-A1",
+    "year": 2018,
+    "ownerId": "F9CFDC66-413E-42BD-9829-2CEEDF7891F7"
+  }
+
+PUT /v1/properties/{id}
+  {
+    "name": "Wynwood Loft 1BR - Updated",
+    "address": "2500 NW 2nd Ave, Miami, FL 33127",
+    "codeInternal": "WY-LOFT-2500-A1",
+    "year": 2019
+  }
+
+PATCH /v1/properties/{id}/price
+  {
+    "newPrice": 449999
+  }
+
+POST /v1/properties/{id}/images
+  {
+    "file": "https://cdn.example.com/properties/b8a3b7a3-6c6c-4d3b-9f5c-1f7db1f2f4e0/cover.jpg",
+    "enabled": true
+  }

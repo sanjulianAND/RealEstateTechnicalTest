@@ -79,3 +79,28 @@ FOREIGN KEY(IdProperty) REFERENCES dbo.Property(IdProperty);
 
 CREATE INDEX IX_PropertyTrace_Property_DateSale ON dbo.PropertyTrace(IdProperty, DateSale);
 GO
+
+/** Examples **/
+
+DECLARE @owner1 UNIQUEIDENTIFIER = NEWID(), @owner2 UNIQUEIDENTIFIER = NEWID();
+INSERT INTO dbo.Owner(IdOwner, Name, Address, Photo, Birthday)
+VALUES
+(@owner1, N'Anna Collins', N'1200 Brickell Ave, Miami, FL', NULL, '1989-06-10'),
+(@owner2, N'Patrick Reed', N'1450 Ocean Dr, Miami Beach, FL', NULL, '1982-03-22');
+
+DECLARE @p1 UNIQUEIDENTIFIER = NEWID(), @p2 UNIQUEIDENTIFIER = NEWID();
+INSERT INTO dbo.Property(IdProperty, Name, Address, Price, CodeInternal, [Year], IdOwner)
+VALUES
+(@p1, N'Brickell Bay 2BR', N'1200 Brickell Ave, Miami, FL', 520000, N'BB-2BR-1200', 2015, @owner1),
+(@p2, N'South Beach Studio', N'1450 Ocean Dr, Miami Beach, FL', 390000, N'SB-ST-1450', 2012, @owner2);
+
+INSERT INTO dbo.PropertyImage(IdPropertyImage, IdProperty, [File], Enabled)
+VALUES
+(NEWID(), @p1, N'https://cdn.example.com/p1/cover.jpg', 1),
+(NEWID(), @p2, N'https://cdn.example.com/p2/cover.jpg', 1);
+
+INSERT INTO dbo.PropertyTrace(IdPropertyTrace, IdProperty, DateSale, [Name], [Value], Tax)
+VALUES
+(NEWID(), @p1, '2023-09-01', N'Closing-REF-001', 500000, 15000),
+(NEWID(), @p2, '2022-12-15', N'Closing-REF-002', 360000, 10800);
+GO
