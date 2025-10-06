@@ -1,0 +1,42 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  solution: 'RealEstateTechnicalTest.sln'
+  apiProject: 'RealEstateTechnicalTest/RealEstateTechnicalTest.csproj'
+  dockerRepository: 'realestate-api'
+  dockerImageTag: '$(Build.BuildId)'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- script: dotnet build $(solution) -c $(buildConfiguration)
+  displayName: 'Build'
+
+- script: dotnet test --no-build -c $(buildConfiguration)
+  displayName: 'Test'
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/*.trx'
+    searchFolder: '$(Agent.TempDirectory)'
+    failTaskOnFailedTests: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'RealEstateTechnicalTest/bin/$(buildConfiguration)/net8.0'
+    ArtifactName: 'api-drop'
