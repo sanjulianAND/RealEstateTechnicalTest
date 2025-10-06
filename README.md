@@ -41,6 +41,8 @@ IX_PropertyImage (IdProperty, Enabled), IX_PropertyTrace (IdProperty, DateSale).
 
 - Added CreatedAt/UpdatedAt and Enabled to match the note “add fields as you see fit”.
 
+Note: The schema.sql si located at `RealEstateTechnicalTest\db\schema.sql`
+
 ### How to Run Locally
 
 Prerequisites
